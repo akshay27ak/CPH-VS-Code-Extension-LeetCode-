@@ -1,0 +1,10 @@
+out
+dist
+node_modules
+.vscode-test/
+*.vsix
+solution.cpp
+driver.cpp
+driver.exe
+testcases
+outputs
