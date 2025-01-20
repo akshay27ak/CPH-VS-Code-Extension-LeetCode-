@@ -25,10 +25,14 @@ export function activate(context: vscode.ExtensionContext) {
 
         panel.webview.onDidReceiveMessage(async (message) => {
             if (message.command === 'fetchTestCases') {
-                const url = message.url;
+                const { url, language } = message;
 
                 try {
-                    const response = await fetch('http://localhost:3000/fetch-testcases', {
+                    // Choose the API endpoint based on the selected language
+                    const endpoint =
+                        language === 'CPP' ? '/fetch-testcases-cpp' : '/fetch-testcases-python';
+
+                    const response = await fetch(`http://localhost:30002${endpoint}`, {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json',
@@ -49,34 +53,39 @@ export function activate(context: vscode.ExtensionContext) {
                         testCases,
                     });
 
-                    const solutionCppPath = path.join(context.extensionPath, 'solution.cpp');
-                    const document = await vscode.workspace.openTextDocument(solutionCppPath);
+                    // Open the correct file based on the selected language
+                    const filePath =
+                        language === 'CPP'
+                            ? path.join(context.extensionPath, 'solution.cpp')
+                            : path.join(context.extensionPath, 'solution.py');
+
+                    const document = await vscode.workspace.openTextDocument(filePath);
                     await vscode.window.showTextDocument(document, { preview: false });
                 } catch (error) {
                     if (error instanceof Error) {
                         vscode.window.showErrorMessage('Failed to fetch test cases: ' + error.message);
                     } else {
-                        vscode.window.showErrorMessage('Failed to fetch test cases due to an unknown error.');
+                        vscode.window.showErrorMessage(
+                            'Failed to fetch test cases due to an unknown error.'
+                        );
                     }
                 }
             } else if (message.command === 'runScript') {
                 const testCases = message.testCases as { input: string; output: string }[];
-            
-                // Update the testcases folder with values from the textboxes
+
                 updateTestCasesFolder(testCases, context);
-            
+
                 const outputFolderPath = path.join(context.extensionPath, 'outputs');
-            
-                // Clear only the files inside the outputs folder
+
                 if (fs.existsSync(outputFolderPath)) {
                     const outputFiles = fs.readdirSync(outputFolderPath);
                     outputFiles.forEach((file) => {
                         const filePath = path.join(outputFolderPath, file);
-                        fs.unlinkSync(filePath); // Remove the file
+                        fs.unlinkSync(filePath);
                     });
                     console.log('Files inside the outputs folder cleared.');
                 }
-            
+
                 const runJsPath = path.join(context.extensionPath, 'run.js');
 
                 exec(`node "${runJsPath}"`, { cwd: context.extensionPath }, (error, stdout, stderr) => {
@@ -86,11 +95,12 @@ export function activate(context: vscode.ExtensionContext) {
                         return;
                     }
 
-                    // Check if the outputs folder is still empty after code execution
                     const outputFiles = fs.readdirSync(outputFolderPath);
-            
+
                     if (outputFiles.length === 0) {
-                        vscode.window.showErrorMessage('There was a compilation error in your code. No output generated.');
+                        vscode.window.showErrorMessage(
+                            'There was a compilation error in your code. No output generated.'
+                        );
                         return;
                     }
                     vscode.window.showInformationMessage('Code execution completed successfully!');
@@ -117,13 +127,11 @@ export function activate(context: vscode.ExtensionContext) {
 function updateTestCasesFolder(testCases: { input: string; output: string }[], context: vscode.ExtensionContext) {
     const testcasesPath = path.join(context.extensionPath, 'testcases');
 
-    // Ensure the testcases folder exists
     if (fs.existsSync(testcasesPath)) {
         fs.rmSync(testcasesPath, { recursive: true, force: true });
     }
     fs.mkdirSync(testcasesPath, { recursive: true });
 
-    // Write test case files
     testCases.forEach((testCase, index) => {
         const inputPath = path.join(testcasesPath, `input_${index + 1}.txt`);
         const outputPath = path.join(testcasesPath, `output_${index + 1}.txt`);
@@ -153,29 +161,17 @@ function startServer(context: vscode.ExtensionContext) {
         console.log(`[Server] exited with code ${code}`);
         serverProcess = null;
     });
-
-    // vscode.window.showInformationMessage('Server started.');
 }
 
 function stopServer() {
     if (serverProcess) {
         serverProcess.kill();
         serverProcess = null;
-        // vscode.window.showInformationMessage('Server stopped.');
-    } else {
-        // vscode.window.showInformationMessage('No running server to stop.');
     }
 }
 
 function parseTestCases(rawTestCases: any[]): { input: string; output: string }[] {
-    const testCases: { input: string; output: string }[] = [];
-
-    rawTestCases.forEach((example) => {
-        const { input, output } = example;
-        testCases.push({ input, output });
-    });
-
-    return testCases;
+    return rawTestCases.map(({ input, output }) => ({ input, output }));
 }
 
 function getWebviewContent(): string {
@@ -198,7 +194,7 @@ function getWebviewContent(): string {
                     display: block;
                     margin-bottom: 5px;
                 }
-                input[type="text"] {
+                input[type="text"], select {
                     width: 100%;
                     padding: 8px;
                     margin-bottom: 10px;
@@ -231,8 +227,15 @@ function getWebviewContent(): string {
         </head>
         <body>
             <div class="form-group">
+                <label for="languageSelect">Select Language:</label>
+                <select id="languageSelect">
+                    <option value="CPP">CPP</option>
+                    <option value="Python">Python</option>
+                </select>
+
                 <label for="urlInput">Enter LeetCode Problem URL:</label>
                 <input type="text" id="urlInput" placeholder="https://leetcode.com/problems/two-sum/" />
+                
                 <button id="fetchBtn">Fetch Test Cases</button>
                 <button id="runScriptBtn">Run Code</button>
             </div>
@@ -242,6 +245,8 @@ function getWebviewContent(): string {
 
                 document.getElementById('fetchBtn').addEventListener('click', () => {
                     const url = document.getElementById('urlInput').value.trim();
+                    const language = document.getElementById('languageSelect').value;
+
                     if (!url) {
                         alert('Please enter a URL');
                         return;
@@ -249,7 +254,8 @@ function getWebviewContent(): string {
 
                     vscode.postMessage({
                         command: 'fetchTestCases',
-                        url: url,
+                        url,
+                        language,
                     });
                 });
 
@@ -257,11 +263,10 @@ function getWebviewContent(): string {
                     const testCaseDivs = document.querySelectorAll('.test-case');
                     const testCases = [];
 
-                    // Clear all "actual output" textboxes
                     testCaseDivs.forEach((div) => {
                         const actualOutputTextArea = div.querySelector('textarea:nth-of-type(3)');
                         if (actualOutputTextArea) {
-                            actualOutputTextArea.value = ''; // Clear the "actual output" box
+                            actualOutputTextArea.value = '';
                         }
 
                         const inputTextArea = div.querySelector('textarea:nth-of-type(1)');
@@ -280,7 +285,6 @@ function getWebviewContent(): string {
                         testCases,
                     });
                 });
-
 
                 window.addEventListener('message', (event) => {
                     const message = event.data;
