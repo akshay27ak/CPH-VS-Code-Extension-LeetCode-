@@ -2,7 +2,7 @@ out
 dist
 node_modules
 .vscode-test/
-*.vsix
+# *.vsix
 solution.cpp
 driver.cpp
 driver.exe
