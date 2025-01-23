@@ -71,8 +71,7 @@ export function activate(context: vscode.ExtensionContext) {
                     }
                 }
             } else if (message.command === 'runScript') {
-                const testCases = message.testCases as { input: string; output: string }[];
-
+                const { testCases, language } = message; // Get the selected language
                 updateTestCasesFolder(testCases, context);
 
                 const outputFolderPath = path.join(context.extensionPath, 'outputs');
@@ -85,12 +84,14 @@ export function activate(context: vscode.ExtensionContext) {
                     });
                     console.log('Files inside the outputs folder cleared.');
                 }
+        
+                // Decide which script to run based on the selected language
+                const scriptToRun = language === 'CPP' ? 'run.js' : 'runp.js';
+                const scriptPath = path.join(context.extensionPath, scriptToRun);
 
-                const runJsPath = path.join(context.extensionPath, 'run.js');
-
-                exec(`node "${runJsPath}"`, { cwd: context.extensionPath }, (error, stdout, stderr) => {
+                exec(`node "${scriptPath}"`, { cwd: context.extensionPath }, (error, stdout, stderr) => {
                     if (error) {
-                        vscode.window.showErrorMessage('Error executing run.js: ' + error.message);
+                        vscode.window.showErrorMessage(`Error executing ${scriptToRun}: ${error.message}`);
                         console.error('Error details:', stderr);
                         return;
                     }
@@ -260,6 +261,7 @@ function getWebviewContent(): string {
                 });
 
                 document.getElementById('runScriptBtn').addEventListener('click', () => {
+                    const language = document.getElementById('languageSelect').value; // Get selected language
                     const testCaseDivs = document.querySelectorAll('.test-case');
                     const testCases = [];
 
@@ -283,6 +285,7 @@ function getWebviewContent(): string {
                     vscode.postMessage({
                         command: 'runScript',
                         testCases,
+                        language, // Include selected language in the message
                     });
                 });
 

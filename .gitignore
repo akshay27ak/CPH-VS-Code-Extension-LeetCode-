@@ -8,3 +8,6 @@ driver.cpp
 driver.exe
 testcases
 outputs
+driver.py
+solution.py
+__pycache__

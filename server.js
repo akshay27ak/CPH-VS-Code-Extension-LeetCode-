@@ -63,7 +63,7 @@ app.post('/fetch-testcases-cpp', async (req, res) => {
         const $ = cheerio.load(html);
 
         // Extract test cases using your extraction logic
-        const examples = extractExamples($);
+        const examples = extractExamples($, 'cpp');
 
         if (examples.length === 0) {
             return res.status(404).json({ message: 'No test cases found.' });
@@ -127,7 +127,7 @@ app.post('/fetch-testcases-python', async (req, res) => {
         await page.click('#headlessui-popover-button-\\:r1v\\: > div > button');
         await page.waitForSelector('#headlessui-popover-panel-\\:r29\\: > div > div > div\:nth-child(1) > div\:nth-child(3)');
         await page.click('#headlessui-popover-panel-\\:r29\\: > div > div > div\:nth-child(1) > div\:nth-child(3)');
-        await delay(500);
+        await delay(1000);
         // Extract the default code
         const code = await page.evaluate(() => {
             const lines = document.querySelectorAll('div.view-lines .view-line');
@@ -157,7 +157,7 @@ app.post('/fetch-testcases-python', async (req, res) => {
         const $ = cheerio.load(html);
 
         // Extract test cases using your extraction logic
-        const examples = extractExamples($);
+        const examples = extractExamples($, 'py');
 
         if (examples.length === 0) {
             return res.status(404).json({ message: 'No test cases found.' });
@@ -199,7 +199,7 @@ app.post('/fetch-testcases-python', async (req, res) => {
 });
 
 // Function to extract test cases from HTML using Cheerio
-function extractExamples($) {
+function extractExamples($, lang) {
     const examples = [];
     
     // Detect Format 1: Check for <pre> tags with test cases
@@ -215,8 +215,9 @@ function extractExamples($) {
     
         // Check if the inputOutput contains 'Input:' or 'Output:'
         if (inputOutput.includes('Input:') || inputOutput.includes('Output:')) {
-            // Replace square brackets with curly braces
-            inputOutput = inputOutput.replace(/\[/g, '{').replace(/\]/g, '}');
+            if (lang === 'cpp') {
+                inputOutput = inputOutput.replace(/\[/g, '{').replace(/\]/g, '}');
+            }
             const [input, output] = parseInputOutput(inputOutput);
             examples.push({ input, output });
         }
@@ -228,9 +229,10 @@ function extractExamples($) {
         let output = $(element).find('strong:contains("Output:")').next().text().trim();
 
         if (input && output) {
-            // Replace square brackets with curly braces in both input and output
-            input = input.replace(/\[/g, '{').replace(/\]/g, '}');
-            output = output.replace(/\[/g, '{').replace(/\]/g, '}');
+            if (lang === 'cpp') { 
+                input = input.replace(/\[/g, '{').replace(/\]/g, '}');
+                output = output.replace(/\[/g, '{').replace(/\]/g, '}');
+            }
             examples.push({ input, output });
         }
     });

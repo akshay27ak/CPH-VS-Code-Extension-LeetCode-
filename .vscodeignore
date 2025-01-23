@@ -1,4 +1,5 @@
 .vscode/**
+__pycache__/**
 .vscode-test/**
 src/**
 .gitignore
@@ -11,6 +12,8 @@ vsc-extension-quickstart.md
 **/.vscode-test.*
 testcases
 driver.cpp
+driver.py
 driver.exe 
 solution.cpp
+solution.py
 outputs
