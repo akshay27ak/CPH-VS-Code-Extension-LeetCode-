@@ -3,6 +3,10 @@
   "displayName": "CPH_Leetcode",
   "description": "A VS Code extension to fetch and display LeetCode test cases and giving ouputs for my code.",
   "version": "0.0.1",
+  "repository": {
+        "type": "git",
+        "url": "https://github.com/akshay27ak/CPH-VS-Code-Extension-LeetCode-"
+    },
   "engines": {
     "vscode": "^1.96.0"
   },
