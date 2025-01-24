@@ -11,7 +11,7 @@ This VS Code extension allows you to fetch LeetCode problem test cases, run your
 - **GUI Interface**: A user-friendly webview interface to input LeetCode URLs, display test cases, and view outputs.
 - **Error Handling**: If the code fails to produce output, an error message is displayed.
 
-![Code Execution](images/image.png)
+![Code Execution](images/ss.png)
 
 ## Quick Start
 
