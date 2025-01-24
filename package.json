@@ -1,7 +1,7 @@
 {
   "name": "cph-leetcode",
   "displayName": "CPH_Leetcode",
-  "description": "A VS Code extension to fetch and display LeetCode test cases.",
+  "description": "A VS Code extension to fetch and display LeetCode test cases and giving ouputs for my code.",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.96.0"
@@ -18,7 +18,7 @@
     "commands": [
       {
         "command": "extension.openPanel",
-        "title": "Open Test Case Panel"
+        "title": "Leetcode CPH Extension"
       }
     ]
   },
