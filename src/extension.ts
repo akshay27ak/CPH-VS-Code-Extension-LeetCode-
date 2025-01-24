@@ -28,7 +28,6 @@ export function activate(context: vscode.ExtensionContext) {
                 const { url, language } = message;
 
                 try {
-                    // Choose the API endpoint based on the selected language
                     const endpoint =
                         language === 'CPP' ? '/fetch-testcases-cpp' : '/fetch-testcases-python';
 
@@ -53,7 +52,6 @@ export function activate(context: vscode.ExtensionContext) {
                         testCases,
                     });
 
-                    // Open the correct file based on the selected language
                     const filePath =
                         language === 'CPP'
                             ? path.join(context.extensionPath, 'solution.cpp')
@@ -71,7 +69,7 @@ export function activate(context: vscode.ExtensionContext) {
                     }
                 }
             } else if (message.command === 'runScript') {
-                const { testCases, language } = message; // Get the selected language
+                const { testCases, language } = message; 
                 updateTestCasesFolder(testCases, context);
 
                 const outputFolderPath = path.join(context.extensionPath, 'outputs');
@@ -85,7 +83,6 @@ export function activate(context: vscode.ExtensionContext) {
                     console.log('Files inside the outputs folder cleared.');
                 }
         
-                // Decide which script to run based on the selected language
                 const scriptToRun = language === 'CPP' ? 'run.js' : 'runp.js';
                 const scriptPath = path.join(context.extensionPath, scriptToRun);
 
@@ -235,7 +232,7 @@ function getWebviewContent(): string {
                 </select>
 
                 <label for="urlInput">Enter LeetCode Problem URL:</label>
-                <input type="text" id="urlInput" placeholder="https://leetcode.com/problems/two-sum/" />
+                <input type="text" id="urlInput" />
                 
                 <button id="fetchBtn">Fetch Test Cases</button>
                 <button id="runScriptBtn">Run Code</button>
@@ -261,7 +258,7 @@ function getWebviewContent(): string {
                 });
 
                 document.getElementById('runScriptBtn').addEventListener('click', () => {
-                    const language = document.getElementById('languageSelect').value; // Get selected language
+                    const language = document.getElementById('languageSelect').value; 
                     const testCaseDivs = document.querySelectorAll('.test-case');
                     const testCases = [];
 
@@ -285,7 +282,7 @@ function getWebviewContent(): string {
                     vscode.postMessage({
                         command: 'runScript',
                         testCases,
-                        language, // Include selected language in the message
+                        language, 
                     });
                 });
 

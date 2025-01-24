@@ -2,7 +2,6 @@ const fs = require("fs");
 const path = require("path");
 const { exec } = require("child_process");
 
-// Extract the function from solution.cpp
 function extractFunction() {
     const solutionPath = path.join(__dirname, "solution.cpp");
     if (!fs.existsSync(solutionPath)) {
@@ -25,7 +24,6 @@ function extractFunction() {
     return functionCode;
 }
 
-// Extract parameter types and names
 function extractVariables(functionCode) {
     const functionSignature = functionCode.split("{")[0].trim();
     const paramsMatch = functionSignature.match(/\(([^)]*)\)/);
@@ -40,7 +38,6 @@ function extractVariables(functionCode) {
     });
 }
 
-// Smart splitting of inputs by variable names
 function splitInputByVariables(content, variables) {
     const splits = [];
     let regexStr = variables.map(({ name }) => `${name}\\s*=`).join("|");
@@ -60,7 +57,6 @@ function splitInputByVariables(content, variables) {
     return splits.filter(Boolean);
 }
 
-// Parse complex inputs (handles nested vectors)
 function parseValue(value) {
     value = value.trim();
 
@@ -78,7 +74,6 @@ function parseValue(value) {
     return isNaN(value) ? value : Number(value);
 }
 
-// Parse inputs from files
 function parseInputs(variables) {
     const testcasesPath = path.join(__dirname, "testcases");
     if (!fs.existsSync(testcasesPath)) {
@@ -107,7 +102,6 @@ function parseInputs(variables) {
     return { inputs, mappedInputs };
 }
 
-// Generate driver.cpp
 function generateDriver() {
     const functionCode = extractFunction();
     const variables = extractVariables(functionCode);
@@ -154,10 +148,10 @@ int main() {
 }`;
 
     const helperCode = `#include <bits/stdc++.h>
-#include <sys/stat.h>  // mkdir (POSIX)
-#include <sys/types.h> // mkdir (POSIX)
-#include <direct.h>    // _mkdir (Windows)
-#include <unistd.h>    // getcwd
+#include <sys/stat.h>  
+#include <sys/types.h> 
+#include <direct.h>    
+#include <unistd.h>    
 using namespace std;
 
 string getRootDirectory() {
@@ -169,10 +163,8 @@ string getRootDirectory() {
 
 void clearDirectory(const string& dirName) {
 #ifdef _WIN32
-    // Windows: remove folder and recreate it
     string command = "rmdir /S /Q \\"" + dirName + "\\" && mkdir \\"" + dirName + "\\"";
 #else
-    // Linux/Unix: remove folder and recreate it
     string command = "rm -rf \\"" + dirName + "\\" && mkdir -p \\"" + dirName + "\\"";
 #endif
     system(command.c_str());
@@ -181,13 +173,12 @@ void clearDirectory(const string& dirName) {
 void createDirectory(const string& dirName) {
     struct stat info;
     if (stat(dirName.c_str(), &info) == 0 && (info.st_mode & S_IFDIR)) {
-        // Directory exists, so clear it
         clearDirectory(dirName);
     } else {
 #ifdef _WIN32
-        _mkdir(dirName.c_str());  // Windows
+        _mkdir(dirName.c_str());  
 #else
-        mkdir(dirName.c_str(), 0777);  // Linux/Unix
+        mkdir(dirName.c_str(), 0777);  
 #endif
     }
 }
@@ -227,11 +218,9 @@ ${mainBody}`;
     return driverPath;
 }
 
-// Function to compile and run driver.cpp
 function compileAndRun(driverPath) {
     const executablePath = driverPath.replace(".cpp", "");
 
-    // Compile the driver.cpp file
     exec(`g++ -o "${executablePath}" "${driverPath}"`, (compileErr, stdout, stderr) => {
         if (compileErr) {
             console.error("Compilation Error:", stderr);
@@ -239,7 +228,6 @@ function compileAndRun(driverPath) {
         }
         console.log("Compilation Successful!");
 
-        // Run the compiled executable
         exec(`"${executablePath}"`, (runErr, runOut, runErrMsg) => {
             if (runErr) {
                 console.error("Runtime Error:", runErrMsg);
@@ -250,7 +238,6 @@ function compileAndRun(driverPath) {
     });
 }
 
-// Execute script
 try {
     const driverPath = generateDriver();
     compileAndRun(driverPath);

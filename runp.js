@@ -2,7 +2,6 @@ const fs = require("fs");
 const path = require("path");
 const { exec } = require("child_process");
 
-// Extract the function from solution.py
 function extractFunction() {
     const solutionPath = path.join(__dirname, "solution.py");
     if (!fs.existsSync(solutionPath)) {
@@ -22,7 +21,6 @@ function extractFunction() {
     return { functionName, params };
 }
 
-// Extract parameter variables from inputs
 function splitInputByVariables(content, variables) {
     const splits = [];
     let regexStr = variables.map((name) => `${name}\\s*=`).join("|");
@@ -42,18 +40,16 @@ function splitInputByVariables(content, variables) {
     return splits.filter(Boolean);
 }
 
-// Parse value strings into appropriate types
 function parseValue(value) {
     value = value.trim();
 
     if (value.startsWith("[") && value.endsWith("]")) {
-        return JSON.parse(value.replace(/'/g, '"')); // Replace single quotes with double for JSON parsing
+        return JSON.parse(value.replace(/'/g, '"')); 
     }
 
     return isNaN(value) ? value : Number(value);
 }
 
-// Parse inputs from the testcases folder
 function parseInputs(variables) {
     const testcasesPath = path.join(__dirname, "testcases");
     if (!fs.existsSync(testcasesPath)) {
@@ -81,7 +77,6 @@ function parseInputs(variables) {
     return inputs;
 }
 
-// Generate driver.py
 function generateDriver(functionName, variables, inputs) {
     const driverContent = `
 import os
@@ -138,7 +133,6 @@ if __name__ == "__main__":
     return driverPath;
 }
 
-// Run the generated driver.py file
 function runDriver(driverPath) {
     exec(`python "${driverPath}"`, (err, stdout, stderr) => {
         if (err) {
@@ -149,7 +143,6 @@ function runDriver(driverPath) {
     });
 }
 
-// Main execution
 try {
     const { functionName, params } = extractFunction();
     const testCases = parseInputs(params);
